@@ -1,6 +1,14 @@
 <?php
 
+function secrets($what) {
+  $map = parse_ini_file('secrets.ini');
+  if(isset($map[$what])) { 
+    return $map[$what];
+  }
+}
+
 function edmunds($ep, $query) {
+  $key = secrets('edmunds');
   $url = implode('', [
     'https://api.edmunds.com/v1/api/tmv/tmvservice/',
     $ep, '?',
@@ -13,6 +21,7 @@ function edmunds($ep, $query) {
 }
 
 function kbb($ep, $query) {
+  $key = secrets('kbb');
 }
 
 function price() {

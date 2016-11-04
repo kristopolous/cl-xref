@@ -1,5 +1,7 @@
 <?php
 
+include('title-clean.php');
+
 function secrets($what) {
   $map = parse_ini_file('secrets.ini');
   if(isset($map[$what])) { 

@@ -48,7 +48,7 @@ function get_year($what) {
 
 function title_clean($dirty) {
   // our modest goal is a year make and model.
-  $clean = preg_replace('/[*,]/', ' ', $dirty);
+  $clean = preg_replace('/[^\w\s]/', ' ', $dirty);
   $clean = preg_replace('/\s+/', ' ', $clean);
 
   return [

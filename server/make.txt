@@ -1,38 +1,35 @@
-ab flug
-ac
+jeep
+saturn
+scion
+kia
+gmc
+tesla
+lincoln
 acura
-aerogear
-apr performance
 aston martin
 audi
+maserati
+fiat
 bentley
 bmw
-border
 buick
 cadillac
 chevrolet
 chrysler
-datsun
 dodge
-eagle
 ferrari
 ford
-guldstrand
-hennessey
 honda
 hyundai
 infiniti
-ings
 jaguar
-koenigsegg
 lancia
 lexus
-lingenfelter
 lotus
 mazda
 mclaren
+mercury
 mercedes
-mine's
 mini
 mitsubishi
 mugen
@@ -50,13 +47,9 @@ seat
 shelby
 sparco
 subaru
-tommy kaira
-tom's
 toyota
 tvr
 vauxhall
 veilside
-vis racing
 volkswagen
 volvo
-wings west

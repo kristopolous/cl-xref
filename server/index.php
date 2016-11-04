@@ -25,10 +25,16 @@ function price() {
 function rating() {
 }
 
+function all() {
+  return [
+    'price' => price(),
+    'rating' => rating()
+  ];
+}
+
 $func = $_REQUEST['func'];
 $query = $_REQUEST['query'];
-$zip = $_REQUEST['zip'];
 
-if(in_array($func, ['price', 'rating'])) {
+if(in_array($func, ['all', 'price', 'rating'])) {
   echo json_encode($$func());
 } 

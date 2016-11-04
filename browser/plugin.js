@@ -1,23 +1,40 @@
 
-var uniq = 'WQJL3D1oTHaEQjW0oNpPnA';
+var uniq = 'WQJL3D1oTHaEQjW0oNpPnA',
+    server = '9ol.es/cars/',
+    zip;
 
-"<style>
+function getInfo(el, query) {
+  el.innerHTML = '...';
 
-
-function getInfo(el, data) {
+  GM_xmlhttpRequest({
+    method: 'GET',
+    url: server,
+    data: [
+      'zip=' + zip,
+      'query=' + encodeURIComponent(query),
+      'func=' + all
+    ].join('&'),
+    onload: function(res_str) {
+      el.onclick = null;
+      var res = JSON.parse(res_str);
+      if(res) {
+        el.innerHTML = [ res.price, res.rating ].join('|');
+      }
+    }
+  });
 }
 
 function inject() {
   var style = document.createElement('style');
+  var allTitles = document.querySelectorAll('.result-title');
+
   style.innerHTML = [
     '.' + uniq + ' {',
     '  border: 1px solid silver;'
     '  display: inline-block;',
     '}'
-  ].implode('');
+  ].join('');
   document.body.appendChild(style);
-
-  var allTitles = document.querySelectorAll('.result-title');
 
   allTitles.forEach(function(what) {
     var 
@@ -32,6 +49,11 @@ function inject() {
     }
     container.appendChild(btn);
   });
+}
+
+var res = window.location.search.match(/postal=(\d*)/);
+if(res) {
+  zip = res[1];
 }
 
 inject();

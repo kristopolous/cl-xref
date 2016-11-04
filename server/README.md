@@ -1,0 +1,1 @@
+The list of makes was initially a copy/pasted from http://www.forzacentral.com/forum/threads/complete-car-manufacturer-list-from-txt-file.255/ but a number of things had to be added/removed because that list had a few issues.

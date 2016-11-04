@@ -19,6 +19,8 @@ function getInfo(el, query) {
       var res = JSON.parse(res_str);
       if(res) {
         el.innerHTML = [ res.price, res.rating ].join('|');
+      } else {
+        el.innerHTML = 'could not parse: ' + res_str;
       }
     }
   });
@@ -34,6 +36,7 @@ function inject() {
     '  display: inline-block;',
     '}'
   ].join('');
+
   document.body.appendChild(style);
 
   allTitles.forEach(function(what) {

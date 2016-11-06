@@ -65,14 +65,6 @@ function get_model($what, &$obj) {
     if(isset($mapper[$part])) {
       $part = $mapper[$part];
     }
-    //echo "($part) " ;
-    $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($part) . "'";
-    $res = $db->query($query)->fetchArray();
-    if($res) {
-      $obj['make'] = $res['make'];
-      $obj['model'] = $res['model'];
-      return;
-    }
     if($prev) {
       $tuple = "$prev $part";
       $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($tuple) . "'";
@@ -82,6 +74,14 @@ function get_model($what, &$obj) {
         $obj['model'] = $res['model'];
         return;
       }
+    }
+    //echo "($part) " ;
+    $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($part) . "'";
+    $res = $db->query($query)->fetchArray();
+    if($res) {
+      $obj['make'] = $res['make'];
+      $obj['model'] = $res['model'];
+      return;
     }
     $prev = $part;
   } 
@@ -107,6 +107,23 @@ function get_make($what) {
   } 
 }
 
+function parse_year($str) {
+  $str = trim($str);
+
+  $attempt = intval($str, 10);
+  // we have a full year ... just return
+  if($attempt > 1900) {
+    return $attempt;
+  }
+
+  // we have something from the 1900s
+  if($attempt > 50) {
+    return intval("19$str", 10);
+  }
+
+  return intval("20$str", 10);
+}
+
 function get_year(&$what, &$obj) {
   // The *best* case is when we have 20\d\d
   if(
@@ -115,7 +132,7 @@ function get_year(&$what, &$obj) {
     $off = $matches[0][1];
 
     $what = substr($what, 0, $off) . substr($what, $off + strlen($matches[0][0]));
-    $obj['year'] = $matches[0];
+    $obj['year'] = parse_year($matches[0][0]);
     return;
   }
   // this is the format
@@ -124,32 +141,8 @@ function get_year(&$what, &$obj) {
   if(
     preg_match('/ \'?(0\d)\'?/', $what, $matches)
   ) {
-    $attempt = intval($matches[1]);
-
-    $prefix = '20';
-    if($attempt > 50) {
-      $prefix = '19';
-    }
-
-    $obj['year'] = $prefix . $matches[1];
+    $obj['year'] = parse_year( $matches[1] );
   }
-}
-
-function title_clean($clean) {
-  // There's things like the Fancy Car 3-4 from manufacturers ... don't ask me.
-  // Ex. Saab 9-3
-  //$clean = preg_replace('/(\d+)-(\d+)/', '$1$2', $clean);
-  // our modest goal is a year make and model.
-  $clean = preg_replace('/[^\w\s\-]/', ' ', $clean);
-  $clean = preg_replace('/\s+/', ' ', $clean);
-
-  $ret = [];
-  get_year($clean, $ret);
-  $clean = preg_replace('/^\s+/', '', $clean);
-  // I want to do truncation only after the year was guessed.
-  $clean = preg_replace('/\-(\d)/', '$1', $clean);
-  get_model($clean, $ret);
-  return $ret;
 }
 
 function show_guesses() {
@@ -159,5 +152,24 @@ function show_guesses() {
       unset($guessMap[$key]);
     }
   }
-  echo json_encode($guessMap, JSON_PRETTY_PRINT);
+  //echo json_encode($guessMap, JSON_PRETTY_PRINT);
 }
+
+function title_clean($clean) {
+  // There's things like the Fancy Car 3-4 from manufacturers ... don't ask me.
+  // Ex. Saab 9-3
+  //$clean = preg_replace('/(\d+)-(\d+)/', '$1$2', $clean);
+  // our modest goal is a year make and model.
+  $ret = ['_raw' => trim($clean)];
+  $clean = preg_replace('/[^\w\s\-]/', ' ', $clean);
+  $clean = preg_replace('/\s+/', ' ', $clean);
+
+  $ret['_clean'] = $clean;
+  get_year($clean, $ret);
+  $clean = preg_replace('/^\s+/', '', $clean);
+  // I want to do truncation only after the year was guessed.
+  $clean = preg_replace('/\-(\d)/', '$1', $clean);
+  get_model($clean, $ret);
+  return $ret;
+}
+

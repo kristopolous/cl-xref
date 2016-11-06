@@ -12,6 +12,21 @@ $mapper = [
 ];
 $guessMap = [];
 
+function stop_words($what) {
+  // This is determined by just reading a bunch of cl posts ... yeah, that's right ... by hand 
+  // like a sucker.  Why? Because this is a domain specific application so there's work.
+  // ok ok ... what I really did was this:
+  // cat title-list.txt | tr ' ' '\n' | grep -vE '[0-9]*' | sort | uniq -c | sort -nr |
+  static $word_list = ['deal', 'day', 'sell', 'obo', 'black', 'priced', 'mile', 'perfect', 'needs', 'service', 'this', 'is', 'gas', 'accident', 'luxury', 'special', 'cold', 'well', 'loaded', 'owner', 'no', 'in', 'white', 'must', 'sale', 'carfax', 'car', 'leather', 'condition', 'runs', 'or', 'new', 'price', 'on', 'all', 'mileage', 'trade', 'warranty', 'best', 'blue', 'red', 'original', 'smog', 'good', 'nice', 'under', 'mint', 'of', 'up', 'rare', 'full', 'wow', 'custom', 'the', 'with', 'like', 'miles', 'clean', 'title', 'only', 'for', 'excellent', 'great', 'very', 'one', 'fully', 'very', 'and', 'low'];
+  $parts = explode(' ', $what);
+  $final = [];
+  foreach($parts as $word) {
+    if(array_search($word, $word_list) === false && strlen($word) > 1) {
+      $final[] = $word;
+    }
+  }
+  return implode(' ', $final);
+}
 
 function guess_model($what) {
   global $db, $mapper, $guessMap;
@@ -118,30 +133,24 @@ function parse_year($str) {
 
   // we have something from the 1900s
   if($attempt > 50) {
-    return intval("19$str", 10);
+    return 1900 + $attempt;
   }
 
-  return intval("20$str", 10);
+  return 2000 + $attempt;
 }
 
 function get_year(&$what, &$obj) {
   // The *best* case is when we have 20\d\d
   if(
-    preg_match('/^\'?(\d\d)\'? /', $what, $matches, PREG_OFFSET_CAPTURE) ||
-    preg_match('/(20|19)\d\d/', $what, $matches, PREG_OFFSET_CAPTURE)) {
+    preg_match('/^\'?(\d{2,3})\'? /', $what, $matches, PREG_OFFSET_CAPTURE) ||
+    preg_match('/(20|19)\d\d/', $what, $matches, PREG_OFFSET_CAPTURE) || 
+    preg_match('/ \'?(0\d)\'?/', $what, $matches, PREG_OFFSET_CAPTURE)
+  ) {
     $off = $matches[0][1];
 
     $what = substr($what, 0, $off) . substr($what, $off + strlen($matches[0][0]));
     $obj['year'] = parse_year($matches[0][0]);
     return;
-  }
-  // this is the format
-  // 09 or
-  // '09
-  if(
-    preg_match('/ \'?(0\d)\'?/', $what, $matches)
-  ) {
-    $obj['year'] = parse_year( $matches[1] );
   }
 }
 
@@ -160,9 +169,12 @@ function title_clean($clean) {
   // Ex. Saab 9-3
   //$clean = preg_replace('/(\d+)-(\d+)/', '$1$2', $clean);
   // our modest goal is a year make and model.
-  $ret = ['_raw' => trim($clean)];
+  $clean = trim($clean);
+  $ret = ['_raw' => $clean];
+  $clean = strtolower($clean);
   $clean = preg_replace('/[^\w\s\-]/', ' ', $clean);
   $clean = preg_replace('/\s+/', ' ', $clean);
+  $clean = stop_words($clean);
 
   $ret['_clean'] = $clean;
   get_year($clean, $ret);

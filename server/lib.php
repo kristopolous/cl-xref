@@ -17,9 +17,24 @@ function edmunds($ep, $query) {
     http_build_query(array_merge($query, [
       'fmt' => 'json',
       'api_key' => $key
-    ])
+    ]))
   ]);
   return file_get_contents($url);
+}
+
+//
+// So most of endmunds apis require a style id
+// that you can get with this query...
+//
+// I could make this a php class but they're a
+// pain ... so just make sure that there's
+//
+//  year, make, model
+//
+// keys and values here.
+//
+function edmunds_getstyle($car_struct) {
+  var_dump($car_struct);
 }
 
 function kbb($ep, $query) {

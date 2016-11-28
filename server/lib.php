@@ -1,6 +1,7 @@
 <?php
 
 include('title-clean.php');
+include('edmunds.php');
 
 function secrets($what) {
   $map = parse_ini_file('secrets.ini');
@@ -9,21 +10,8 @@ function secrets($what) {
   }
 }
 
-function edmunds($ep, $query) {
-  $key = secrets('edmunds');
-  $url = implode('', [
-    'https://api.edmunds.com/v1/api/tmv/tmvservice/',
-    $ep, '?',
-    http_build_query(array_merge($query, [
-      'fmt' => 'json',
-      'api_key' => $key
-    ]))
-  ]);
-  return file_get_contents($url);
-}
-
 //
-// So most of endmunds apis require a style id
+// So most of edmunds apis require a style id
 // that you can get with this query...
 //
 // I could make this a php class but they're a
@@ -34,6 +22,9 @@ function edmunds($ep, $query) {
 // keys and values here.
 //
 function edmunds_getstyle($car_struct) {
+  // We can approach this from a number of angles.
+  // Edmunds lists all the years as it turns out
+  $modelMap = edmunds_getyear($car_struct['year']);
   var_dump($car_struct);
 }
 

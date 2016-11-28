@@ -17,7 +17,7 @@ function stop_words($what) {
   // like a sucker.  Why? Because this is a domain specific application so there's work.
   // ok ok ... what I really did was this:
   // cat title-list.txt | tr ' ' '\n' | grep -vE '[0-9]*' | sort | uniq -c | sort -nr |
-  static $word_list = ['deal', 'day', 'sell', 'obo', 'black', 'priced', 'mile', 'perfect', 'needs', 'service', 'this', 'is', 'gas', 'accident', 'luxury', 'special', 'cold', 'well', 'loaded', 'owner', 'no', 'in', 'white', 'must', 'sale', 'carfax', 'car', 'leather', 'condition', 'runs', 'or', 'new', 'price', 'on', 'all', 'mileage', 'trade', 'warranty', 'best', 'blue', 'red', 'original', 'smog', 'good', 'nice', 'under', 'mint', 'of', 'up', 'rare', 'full', 'wow', 'custom', 'the', 'with', 'like', 'miles', 'clean', 'title', 'only', 'for', 'excellent', 'great', 'very', 'one', 'fully', 'very', 'and', 'low'];
+  static $word_list = ['deal', 'day', 'sell', 'obo', 'black', 'priced', 'mile', 'perfect', 'needs', 'service', 'this', 'is', 'gas', 'accident', 'luxury', 'special', 'cold', 'well', 'loaded', 'owner', 'no', 'in', 'white', 'must', 'sale', 'carfax', 'car', 'leather', 'condition', 'runs', 'payments', 'inch', 'will', 'reliable', 'inspected', 'awesome', 'or', 'new', 'price', 'on', 'all', 'mileage', 'trade', 'warranty', 'best', 'blue', 'red', 'original', 'smog', 'good', 'nice', 'under', 'mint', 'of', 'up', 'rare', 'full', 'wow', 'custom', 'the', 'with', 'like', 'miles', 'clean', 'title', 'only', 'for', 'excellent', 'great', 'very', 'one', 'fully', 'very', 'and', 'low'];
   $parts = explode(' ', $what);
   $final = [];
   foreach($parts as $word) {
@@ -73,6 +73,12 @@ function get_model($what, &$obj) {
 
   $partList = array_filter(explode(' ', strtolower($what)));
   $prev = false;
+
+  $append = '';
+  if(isset($obj['make'])) {
+    $append = ' and make="' . $obj['make'] . '"';
+  }
+
   foreach($partList as $part) {
     // this seems to be dangerous to do to the whole string unfortunately.
     $part = preg_replace('/\-/', '', $part);
@@ -82,8 +88,15 @@ function get_model($what, &$obj) {
     }
     if($prev) {
       $tuple = "$prev $part";
-      $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($tuple) . "'";
-      $res = $db->query($query)->fetchArray();
+      $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($tuple) . "'$append";
+      //echo "$query\n";
+      $qres = $db->query($query);
+      $res = $qres->fetchArray();
+      /*
+      if($qres->numColumns() > 1) {
+        echo $qres->numColumns() . " matches $tuple\n";
+      }
+       */
       if($res) {
         $obj['make'] = $res['make'];
         $obj['model'] = $res['model'];
@@ -91,8 +104,15 @@ function get_model($what, &$obj) {
       }
     }
     //echo "($part) " ;
-    $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($part) . "'";
-    $res = $db->query($query)->fetchArray();
+    $query = "select distinct make, model from VehicleModelYear where model like '" . $db->escapeString($part) . "'$append";
+    //echo "$query\n";
+    $qres = $db->query($query);
+    $res = $qres->fetchArray();
+    /*
+    if($qres->numColumns() > 1) {
+      echo $qres->numColumns() . " matches $part\n";
+    }
+    */
     if($res) {
       $obj['make'] = $res['make'];
       $obj['model'] = $res['model'];
@@ -101,11 +121,11 @@ function get_model($what, &$obj) {
     $prev = $part;
   } 
   $obj['make'] = null;
-  echo implode(' ', $partList);
+  //echo implode(' ', $partList);
   guess_model($what);
 }
 
-function get_make($what) {
+function get_make($what, &$obj) {
   global $db, $mapper;
 
   $partList = explode(' ', strtolower($what));
@@ -117,9 +137,12 @@ function get_make($what) {
     $res = $db->query($query)->fetchArray();
     if($res[0] > 0) {
       //echo "($part)" . $res->numColumns() . "$query\n";
-      return $part;
+      $what = str_replace($part, '', $what);
+      $obj['make'] = $part;
+      break;
     }
   } 
+  return $what;
 }
 
 function parse_year($str) {
@@ -181,6 +204,7 @@ function title_clean($clean) {
   $clean = preg_replace('/^\s+/', '', $clean);
   // I want to do truncation only after the year was guessed.
   $clean = preg_replace('/\-(\d)/', '$1', $clean);
+  $clean = get_make($clean, $ret);
   get_model($clean, $ret);
   return $ret;
 }

@@ -24,8 +24,33 @@ function secrets($what) {
 function edmunds_getstyle($car_struct) {
   // We can approach this from a number of angles.
   // Edmunds lists all the years as it turns out
-  $modelMap = edmunds_getyear($car_struct['year']);
-  var_dump($car_struct);
+  if(!isset($car_struct['year'])) {
+    return false;
+  }
+
+  $makeListRaw = edmunds_getyear($car_struct['year']);
+  if(!$makeListRaw) {
+    throw new Error("Couln't find anything fdor year " . $car_struct['year']);
+  }
+  $makeList = json_decode($makeListRaw, true);
+  // we look for the make
+  $found = false;
+  $allMakes = [];
+
+  foreach($makeList['makes'] as $make) {
+    if(strtolower($make['name']) == $car_struct['make']) {
+      $found = true;
+      break;
+    }
+    $allMakes[] = $make['name'];
+  }
+  if(!$found) {
+    var_dump($car_struct);
+    sort($allMakes);
+    echo implode(" ", $allMakes) . "\n";
+  }
+  
+  //var_dump($car_struct);
 }
 
 function kbb($ep, $query) {
